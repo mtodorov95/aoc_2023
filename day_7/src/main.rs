@@ -7,7 +7,7 @@ pub struct Card {
 
 impl Card {
     const LABELS: [char; 13] = [
-        'A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2',
+        'A', 'K', 'Q', 'T', '9', '8', '7', '6', '5', '4', '3', '2', 'J',
     ];
 
     pub fn strength(&self) -> usize {
@@ -38,7 +38,7 @@ impl From<char> for Card {
 }
 
 #[derive(Debug, Default, PartialEq, Eq, Clone, Copy)]
-enum HandType {
+pub enum HandType {
     #[default]
     Five = 7,
     Four = 6,
@@ -104,23 +104,50 @@ impl Hand {
             }
         }
         let keys = counts.keys();
+
         if keys.len() == 1 {
             return HandType::Five;
         }
         if keys.len() == 2 && counts.iter().any(|(_, &val)| val == 4) {
+            if let Some(_) = counts.get(&'J') {
+                return HandType::Five;
+            }
             return HandType::Four;
         }
         if keys.len() == 2 && counts.iter().any(|(_, &val)| val == 3) {
+            if let Some(_) = counts.get(&'J') {
+                return HandType::Five;
+            }
             return HandType::FullHouse;
         }
         if keys.len() == 3 && counts.iter().any(|(_, &val)| val == 3) {
+            if let Some(_) = counts.get(&'J') {
+                return HandType::Four;
+            }
             return HandType::Three;
         }
         if keys.len() == 3 && counts.iter().any(|(_, &val)| val == 2) {
+            if let Some(val) = counts.get(&'J') {
+                if *val == 2 {
+                    return HandType::Four;
+                } else if *val == 1 {
+                    return HandType::FullHouse;
+                }
+            }
             return HandType::TwoPair;
         }
+        if keys.len() == 4 {
+            if let Some(_) = counts.get(&'J') {
+                return HandType::Three;
+            }
+            return HandType::OnePair;
+        }
         if keys.len() == 5 {
-            return HandType::HighCard;
+            if let Some(_) = counts.get(&'J') {
+                return HandType::OnePair;
+            } else {
+                return HandType::HighCard;
+            }
         }
         HandType::OnePair
     }
