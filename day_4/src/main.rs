@@ -147,7 +147,7 @@ fn handle_card(card: &Card, map: &mut BTreeMap<u32, u32>) {
 }
 
 #[cfg(test)]
-mod day_2_tests {
+mod day_4_tests {
     use crate::*;
 
     #[test]

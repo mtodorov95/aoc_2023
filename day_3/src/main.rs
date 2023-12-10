@@ -150,7 +150,7 @@ pub fn part_two(file: String) -> u32 {
 }
 
 #[cfg(test)]
-mod day_2_tests {
+mod day_3_tests {
     use crate::*;
 
     #[test]
