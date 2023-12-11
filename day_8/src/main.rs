@@ -1,5 +1,7 @@
 use std::{collections::VecDeque, str::FromStr};
 
+use rayon::prelude::*;
+
 #[derive(Default, Debug)]
 struct Node {
     label: String,
@@ -84,6 +86,66 @@ impl Map {
         }
         steps
     }
+
+    fn walk_to_end_mult(&mut self) -> usize {
+        let mut current_nodes: Vec<String> = self
+            .nodes
+            .par_iter()
+            .filter_map(|node| {
+                if node.label.ends_with("A") {
+                    return Some(node.label.clone());
+                }
+                None
+            })
+            .collect();
+
+        let mut results: Vec<usize> = vec![];
+        for current in current_nodes.iter() {
+            let mut current = current.clone();
+            let mut steps = 0;
+            while !current.ends_with("Z") {
+                let node: &Node = self
+                    .nodes
+                    .iter()
+                    .find(|node| node.label == current)
+                    .unwrap();
+                current = node.label.clone();
+                steps += 1;
+
+                if let Some(instruction) = self.order.pop_front() {
+                    self.order.push_back(instruction);
+                    current = node.next_options[instruction].clone();
+                };
+            }
+            results.push(steps);
+        }
+        let results: usize = results.iter().fold(1, |acc, curr| lcm(acc, *curr));
+        results
+    }
+}
+
+fn lcm(first: usize, second: usize) -> usize {
+    first * second / gcd(first, second)
+}
+
+fn gcd(first: usize, second: usize) -> usize {
+    let mut max = first;
+    let mut min = second;
+    if min > max {
+        let val = max;
+        max = min;
+        min = val;
+    }
+
+    loop {
+        let res = max % min;
+        if res == 0 {
+            return min;
+        }
+
+        max = min;
+        min = res;
+    }
 }
 
 fn main() {
@@ -99,7 +161,7 @@ fn part_one(file: &str) -> usize {
 
 fn part_two(file: &str) -> usize {
     let mut map = Map::from_str(file).unwrap_or_default();
-    map.walk_to_end()
+    map.walk_to_end_mult()
 }
 
 #[cfg(test)]
@@ -108,11 +170,11 @@ mod day_8_tests {
 
     #[test]
     fn test_part_1_example() {
-        assert_eq!(part_one(include_str!("../example")), 2);
+        assert_eq!(part_one(include_str!("../example")), 6);
     }
 
     #[test]
     fn test_part_2_example() {
-        assert_eq!(part_two(include_str!("../example")), 5905);
+        assert_eq!(part_two(include_str!("../example-2")), 6);
     }
 }
