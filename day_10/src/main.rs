@@ -10,7 +10,7 @@ impl From<(char, (usize, usize))> for Pipe {
     fn from(value: (char, (usize, usize))) -> Self {
         Pipe {
             shape: value.0,
-            pos: value.1,
+            pos: (value.1 .0, value.1 .1),
         }
     }
 }
@@ -88,17 +88,19 @@ impl FromStr for Maze {
 }
 
 impl Maze {
-    fn walk(&self)-> usize {
+    fn walk(&self) -> Vec<Pipe> {
         let neighbors: Vec<Pipe> = self.get_neighbors(self.start);
         let mut neighbors = neighbors.iter();
-        let mut current_pipe = neighbors.next().unwrap();
+        let mut current_pipe = neighbors.skip(2).next().unwrap();
         let mut prev = self
             .pipes
             .iter()
             .find(|pipe| pipe.pos.0 as isize == self.start.0 && pipe.pos.1 as isize == self.start.1)
             .unwrap();
+        let mut path:Vec<Pipe> = vec![];
 
         let mut steps = 1;
+        path.push(current_pipe.clone());
         while current_pipe.shape != 'S' {
             let next = current_pipe.next(prev);
             prev = current_pipe;
@@ -108,12 +110,11 @@ impl Maze {
                 .find(|pipe| pipe.pos.0 as isize == next.0 && pipe.pos.1 as isize == next.1)
             {
                 current_pipe = p;
-            } else {
-                current_pipe = neighbors.next().unwrap();
+                path.push(current_pipe.clone());
+                steps += 1;
             }
-            steps+=1;
         }
-        steps
+        path
     }
 
     fn get_neighbors(&self, at: (isize, isize)) -> Vec<Pipe> {
@@ -130,6 +131,22 @@ impl Maze {
         neighbors
     }
 }
+fn polygon_area(vertices: &Vec<Pipe>) -> usize {
+    let number_of_vertices = vertices.len();
+    let mut sum1 = 0;
+    let mut sum2 = 0;
+
+    for i in 0..number_of_vertices - 1 {
+        sum1 = sum1 + vertices[i].pos.0 * vertices[i + 1].pos.1;
+        sum2 = sum2 + vertices[i].pos.1 * vertices[i + 1].pos.0;
+    }
+
+    sum1 = sum1 + vertices[number_of_vertices - 1].pos.0 * vertices[0].pos.1;
+
+    sum2 = sum2 + vertices[0].pos.0 * vertices[number_of_vertices - 1].pos.1;
+
+    return (sum1 - sum2) / 2;
+}
 
 fn main() {
     let file = include_str!("../input");
@@ -139,11 +156,15 @@ fn main() {
 
 fn part_one(file: &str) -> usize {
     let maze = Maze::from_str(file).unwrap_or_default();
-    maze.walk()
+    let path = maze.walk();
+    path.len()/2
 }
 
-fn part_two(file: &str) -> isize {
-    0
+fn part_two(file: &str) -> usize {
+    let maze = Maze::from_str(file).unwrap_or_default();
+    let path = maze.walk();
+    let area = polygon_area(&path);
+    area - (path.len() / 2) + 1
 }
 
 #[cfg(test)]
