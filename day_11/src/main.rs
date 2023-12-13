@@ -16,20 +16,17 @@ impl FromStr for Map {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let layout: Vec<String> = s.lines().map(|line| String::from(line)).collect();
-        let res = Map {
-            layout,
-        };
+        let res = Map { layout };
         Ok(res)
     }
 }
 
 impl Map {
-    fn expand(&mut self) {
-        let mut expanded: Vec<String> = vec![];
-        for row in self.layout.iter() {
-            expanded.push(String::from(row));
+    fn expand(&mut self, degree: usize) -> Vec<(Galaxy, Galaxy)> {
+        let mut empty_rows: Vec<usize> = vec![];
+        for (i, row) in self.layout.iter().enumerate() {
             if row.chars().all(|c| c == '.') {
-                expanded.push(String::from(row));
+                empty_rows.push(i);
             }
         }
 
@@ -48,18 +45,26 @@ impl Map {
             empty = true;
         }
 
-        for row in expanded.iter_mut() {
-            for (n, col) in empty_cols.iter().enumerate() {
-                row.insert(*col+n, '.');
+        let mut galaxies = self.get_galxies();
+        for galaxy in galaxies.iter_mut() {
+            let mut x = 0;
+            let mut y = 0;
+            for row in empty_rows.iter() {
+                if galaxy.y > *row {
+                    y += degree;
+                }
             }
+            for col in empty_cols.iter() {
+                if galaxy.x > *col {
+                    x += degree;
+                }
+            }
+            galaxy.x +=x;
+            galaxy.y +=y;
         }
-
-
-        self.layout = expanded;
+        self.get_pairs_from(galaxies)
     }
-
-    fn get_pairs(&self) -> Vec<(Galaxy, Galaxy)> {
-        let galaxies = self.get_galxies();
+    fn get_pairs_from(&self, galaxies: Vec<Galaxy>) -> Vec<(Galaxy, Galaxy)> {
         let mut pairs: Vec<(Galaxy, Galaxy)> = vec![];
         for (idx, galaxy) in galaxies.iter().enumerate() {
             for i in idx + 1..galaxies.len() {
@@ -88,26 +93,37 @@ impl Map {
 }
 
 fn main() {
-    let file = include_str!("../example");
+    let file = include_str!("../input");
     println!("Part 1: {}", part_one(file));
     println!("Part 2: {}", part_two(file));
 }
 
 fn part_one(file: &str) -> usize {
     let mut map = Map::from_str(file).unwrap_or_default();
-    map.expand(); 
     let mut sum = 0;
-    let pairs = map.get_pairs();
+
+    let pairs = map.expand(1);
     pairs.iter().for_each(|(g1, g2)| {
         let dx = g2.x.abs_diff(g1.x);
         let dy = g2.y.abs_diff(g1.y);
-        sum+=dx + dy;
+        sum += dx + dy;
     });
+
     sum
 }
 
 fn part_two(file: &str) -> usize {
-    0
+    let mut map = Map::from_str(file).unwrap_or_default();
+    let mut sum = 0;
+
+    let pairs = map.expand(999999);
+    pairs.iter().for_each(|(g1, g2)| {
+        let dx = g2.x.abs_diff(g1.x);
+        let dy = g2.y.abs_diff(g1.y);
+        sum += dx + dy;
+    });
+
+    sum
 }
 
 #[cfg(test)]
