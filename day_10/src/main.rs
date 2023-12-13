@@ -168,7 +168,7 @@ fn part_two(file: &str) -> usize {
 }
 
 #[cfg(test)]
-mod day_8_tests {
+mod day_10_tests {
     use crate::*;
 
     #[test]

@@ -90,7 +90,7 @@ fn part_two(file: &str) -> isize {
 }
 
 #[cfg(test)]
-mod day_8_tests {
+mod day_9_tests {
     use crate::*;
 
     #[test]
