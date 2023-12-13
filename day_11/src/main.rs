@@ -16,20 +16,20 @@ impl FromStr for Map {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let layout: Vec<String> = s.lines().map(|line| String::from(line)).collect();
-        let res = Map { layout };
+        let res = Map {
+            layout,
+        };
         Ok(res)
     }
 }
 
 impl Map {
-    fn expand(&mut self, degree: usize) {
+    fn expand(&mut self) {
         let mut expanded: Vec<String> = vec![];
         for row in self.layout.iter() {
             expanded.push(String::from(row));
             if row.chars().all(|c| c == '.') {
-                for _ in 0..degree {
-                    expanded.push(String::from(row));
-                }
+                expanded.push(String::from(row));
             }
         }
 
@@ -50,11 +50,10 @@ impl Map {
 
         for row in expanded.iter_mut() {
             for (n, col) in empty_cols.iter().enumerate() {
-                for i in 0..degree {
-                    row.insert(*col + n + i, '.');
-                }
+                row.insert(*col+n, '.');
             }
         }
+
 
         self.layout = expanded;
     }
@@ -96,13 +95,13 @@ fn main() {
 
 fn part_one(file: &str) -> usize {
     let mut map = Map::from_str(file).unwrap_or_default();
-    map.expand(1);
+    map.expand(); 
     let mut sum = 0;
     let pairs = map.get_pairs();
     pairs.iter().for_each(|(g1, g2)| {
         let dx = g2.x.abs_diff(g1.x);
         let dy = g2.y.abs_diff(g1.y);
-        sum += dx + dy;
+        sum+=dx + dy;
     });
     sum
 }
